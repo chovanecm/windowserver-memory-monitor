@@ -1,7 +1,24 @@
 
+
 # WindowServer Memory Monitor
 
 Automatically monitor and mitigate macOS WindowServer memory leaks.
+
+---
+
+## 🛑 The Problem: WindowServer Memory Leaks on macOS
+
+On some Macs, especially when using third-party window managers (like DockDoor, AltTab, Rectangle, Magnet, etc.), the WindowServer process can slowly consume more and more memory—sometimes 4GB, 8GB, or even more. This leads to:
+
+- System slowdowns and laggy UI
+- Apps becoming unresponsive
+- Needing to manually quit and restart window managers to restore performance
+
+### Concrete Use Case
+
+**You use AltTab or DockDoor for better window management. After a few hours or days, your Mac gets slow, and Activity Monitor shows WindowServer using huge amounts of RAM. You have to quit and relaunch AltTab/DockDoor to fix it.**
+
+This tool automates that process: it watches WindowServer’s memory, and when it gets too high, it restarts the apps you specify—so you don’t have to.
 
 ---
 
@@ -15,14 +32,14 @@ make status      # Check service status (see below)
 make logs        # View recent logs
 ```
 
+
 ## What Does This Do?
 
 This tool runs a background check (every 10 minutes) on your Mac’s WindowServer memory usage. If it gets too high, it automatically restarts the apps you specify—no root required.
 
-**Typical symptoms:**
-- System slowdowns, laggy UI
-- WindowServer using 4GB+ RAM
-- Need to restart window managers (DockDoor, AltTab, etc.)
+**Who is this for?**
+- Anyone who uses third-party window managers or preview tools and suffers from WindowServer memory leaks.
+- Anyone tired of manually quitting and restarting apps to fix slowdowns.
 
 ## How It Works
 
