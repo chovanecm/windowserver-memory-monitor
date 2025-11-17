@@ -1,17 +1,6 @@
 # WindowServer Memory Monitor
 
-<p align="center">
-  <strong>Automatically monitor and mitigate macOS WindowServer memory leaks</strong>
-</p>
-
-<p align="center">
-  <a href="#the-problem">Problem</a> •
-  <a href="#the-solution">Solution</a> •
-  <a href="#installation">Installation</a> •
-  <a href="#configuration">Configuration</a> •
-  <a href="#usage">Usage</a> •
-  <a href="#troubleshooting">Troubleshooting</a>
-</p>
+**Automatically monitor and mitigate macOS WindowServer memory leaks**
 
 ---
 
@@ -59,189 +48,49 @@ This lightweight background service automatically:
 
 ## Installation
 
-### Option 1: Interactive Wizard (Recommended)
-
-The easiest way to get started:
-
 ```bash
 # Clone the repository
 git clone https://github.com/YOUR_USERNAME/mac-windowserver-memleak-workaround.git
 cd mac-windowserver-memleak-workaround
 
-# Run the interactive installation wizard
+# Run the interactive wizard (recommended)
 python3 install.py
-```
 
-The wizard will:
-- 🔍 Detect your current WindowServer memory usage
-- 🎯 Help you set an appropriate threshold
-- 🔎 Find installed apps that commonly cause leaks
-- ⚙️  Configure check interval
-- ✅ Install and start the service automatically
-
-### Option 2: Quick Install (Advanced)
-
-If you prefer to configure manually:
-
-```bash
-# Clone the repository
-git clone https://github.com/YOUR_USERNAME/mac-windowserver-memleak-workaround.git
-cd mac-windowserver-memleak-workaround
-
-# Edit config.ini with your settings
+# Or manually configure and install
 nano config.ini
-
-# Install and start the service
 make install
 ```
 
-That's it! The service is now running in the background.
-
-### What Gets Installed
-
-- **Script**: `~/.config/windowserver_monitor/monitor_dockdoor.py`
-- **Config**: `~/.config/windowserver_monitor/config.ini`
-- **Launch Agent**: `~/Library/LaunchAgents/com.user.windowserver_monitor.plist`
-- **Logs**: `~/Library/Logs/windowserver_monitor.out.log`
-
 ## Configuration
-
-Edit the configuration file to customize behavior:
 
 ```bash
 nano ~/.config/windowserver_monitor/config.ini
 ```
 
-### Configuration Options
-
 ```ini
 [settings]
-# Memory threshold in gigabytes (default: 3.0)
 memory_threshold_gb = 3.0
-
-# Comma-separated list of apps to restart
-# Common culprits: DockDoor, alt-tab, Rectangle, etc.
 apps_to_restart = DockDoor, alt-tab
 ```
 
-**After editing**, restart the service:
-
-```bash
-make uninstall && make install
-```
-
-### Adjusting Check Interval
-
-The default check interval is 10 minutes. To change it:
-
-1. Edit `~/Library/LaunchAgents/com.user.windowserver_monitor.plist`
-2. Modify the `StartInterval` value (in seconds)
-3. Reload: `launchctl unload ~/Library/LaunchAgents/com.user.windowserver_monitor.plist && launchctl load ~/Library/LaunchAgents/com.user.windowserver_monitor.plist`
+After editing: `make uninstall && make install`
 
 ## Usage
 
-### Viewing Logs
-
-Monitor real-time activity:
-
 ```bash
-tail -f ~/Library/Logs/windowserver_monitor.out.log
+make logs          # View logs
+make status        # Check if running
+make test          # Test without installing
+make uninstall     # Remove service
 ```
-
-### Manual Test Run
-
-Test the script without installing:
-
-```bash
-python3 monitor_dockdoor.py
-```
-
-### Managing the Service
-
-**Uninstall completely:**
-```bash
-make uninstall
-```
-
-**Reinstall:**
-```bash
-make install
-```
-
-**Check if running:**
-```bash
-launchctl list | grep windowserver_monitor
-```
-
-## How to Verify It's Working
-
-1. **Check the service is loaded:**
-   ```bash
-   launchctl list | grep windowserver_monitor
-   ```
-   You should see `com.user.windowserver_monitor` in the output.
-
-2. **View the logs:**
-   ```bash
-   cat ~/Library/Logs/windowserver_monitor.out.log
-   ```
-   You should see periodic memory checks logged.
-
-3. **Trigger manually** (optional):
-   ```bash
-   launchctl start com.user.windowserver_monitor
-   ```
 
 ## Troubleshooting
 
-### The service isn't running
-
-```bash
-# Check if loaded
-launchctl list | grep windowserver_monitor
-
-# If not loaded, reinstall
-make install
-```
-
-### No apps are being restarted despite high memory
-
-- Verify app names in `config.ini` match exactly (case-sensitive)
-- Check apps are actually running
-- Lower the threshold temporarily to test
-
-### Permission denied errors
-
-This script runs as your user—no sudo needed. If you see permission errors, verify:
-```bash
-ls -la ~/.config/windowserver_monitor/
-```
-
-### Can't find Python
-
-Ensure Python 3 is installed:
-```bash
-which python3
-python3 --version
-```
+See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for detailed help with common issues.
 
 ## Contributing
 
-Contributions are welcome! Please feel free to:
-
-- 🐛 Report bugs by opening an issue
-- 💡 Suggest features or improvements
-- 🔧 Submit pull requests
-
 See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-## Why This Solution?
-
-- **No kernel extensions** or system modifications
-- **No sudo required** - runs with user permissions
-- **Automatic and hands-off** - set it and forget it
-- **Transparent** - all actions are logged
-- **Customizable** - configure for your specific needs
 
 ## License
 
