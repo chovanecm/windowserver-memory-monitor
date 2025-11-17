@@ -1,13 +1,28 @@
 import subprocess
 import time
 import re
+import configparser
+import os
 
 # --- Configuration ---
-PROCESS_NAME = "WindowServer"
-APP_NAME = "DockDoor"
-MEMORY_THRESHOLD_GB = 4.0
+CONFIG_FILE = 'config.ini'
 # -------------------
 
+def read_config():
+    config = configparser.ConfigParser()
+    if not os.path.exists(CONFIG_FILE):
+        print(f"Error: Configuration file '{CONFIG_FILE}' not found.")
+        print("Please create a config.ini file with [settings] section.")
+        exit(1)
+    config.read(CONFIG_FILE)
+    
+    memory_threshold_gb = config.getfloat('settings', 'memory_threshold_gb', fallback=4.0)
+    apps_str = config.get('settings', 'apps_to_restart', fallback='DockDoor')
+    apps_to_restart = [app.strip() for app in apps_str.split(',') if app.strip()]
+    
+    return memory_threshold_gb, apps_to_restart
+
+MEMORY_THRESHOLD_GB, APPS_TO_RESTART = read_config()
 MEMORY_THRESHOLD_BYTES = MEMORY_THRESHOLD_GB * 1024**3
 
 def get_process_pid(process_name: str) -> str | None:
@@ -75,38 +90,39 @@ def get_memory_from_top(pid: str) -> int | None:
         print(f"Error parsing 'top' output: {e}")
         return None
 
-def restart_app(app_name: str):
-    """Gracefully quit and then restart a macOS application."""
-    print(f"Attempting to restart '{app_name}'...")
-    try:
-        quit_command = f'quit app "{app_name}"'
-        subprocess.run(['osascript', '-e', quit_command], check=True, capture_output=True)
-        print(f"Successfully sent quit command to '{app_name}'.")
-        time.sleep(5)
-        subprocess.run(['open', '-a', app_name], check=True)
-        print(f"Successfully started '{app_name}'.")
-    except (subprocess.CalledProcessError, FileNotFoundError) as e:
-        print(f"Error while trying to restart '{app_name}': {e}")
+def restart_apps(app_names: list[str]):
+    """Gracefully quit and then restart a list of macOS applications."""
+    for app_name in app_names:
+        print(f"Attempting to restart '{app_name}'...")
+        try:
+            quit_command = f'quit app "{app_name}"'
+            subprocess.run(['osascript', '-e', quit_command], check=True, capture_output=True)
+            print(f"Successfully sent quit command to '{app_name}'.")
+            time.sleep(5) # Give app time to quit
+            subprocess.run(['open', '-a', app_name], check=True)
+            print(f"Successfully started '{app_name}'.")
+        except (subprocess.CalledProcessError, FileNotFoundError) as e:
+            print(f"Error while trying to restart '{app_name}': {e}")
 
 def main():
     """Main monitoring function."""
     print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Running check using 'top' command...")
     
-    pid = get_process_pid(PROCESS_NAME)
+    pid = get_process_pid("WindowServer")
     if not pid:
         return
 
     memory_usage_bytes = get_memory_from_top(pid)
     if memory_usage_bytes is None:
-        print(f"Warning: Could not get memory usage for '{PROCESS_NAME}' (PID: {pid}).")
+        print(f"Warning: Could not get memory usage for 'WindowServer' (PID: {pid}).")
         return
 
     memory_usage_gb = memory_usage_bytes / (1024**3)
-    print(f"'{PROCESS_NAME}' memory usage: {memory_usage_gb:.2f} GB (matches Activity Monitor).")
+    print(f"'WindowServer' memory usage: {memory_usage_gb:.2f} GB (matches Activity Monitor).")
 
     if memory_usage_bytes > MEMORY_THRESHOLD_BYTES:
         print(f"ALERT: Memory usage ({memory_usage_gb:.2f} GB) exceeds threshold of {MEMORY_THRESHOLD_GB} GB.")
-        restart_app(APP_NAME)
+        restart_apps(APPS_TO_RESTART)
     else:
         print(f"Memory usage is within the acceptable limit ({MEMORY_THRESHOLD_GB} GB).")
 
