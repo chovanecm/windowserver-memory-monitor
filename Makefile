@@ -157,12 +157,12 @@ status:
 	@echo "║            Service Status Check                       ║"
 	@echo "╚════════════════════════════════════════════════════════╝"
 	@echo ""
-	@if launchctl list | grep -q "$(basename $(PLIST_NAME) .plist)"; then \
-		echo "✓ Service is INSTALLED (launchd job present)"; \
-		launchctl list | grep "$(basename $(PLIST_NAME) .plist)"; \
+	@if [ -f "$$HOME/Library/LaunchAgents/cz.chovanecm.windowserver-monitor.plist" ]; then \
+		launchctl list | grep -q cz.chovanecm.windowserver-monitor && \
+			echo "Service is RUNNING" || \
+			echo "Service is INSTALLED but NOT LOADED (run 'make install' to load)"; \
 	else \
 		echo "Service is NOT INSTALLED (launchd job missing)"; \
-		echo "To install: make install"; \
 	fi
 	@echo ""
 	@if [ -f "$(CONFIG_PATH)" ]; then \
