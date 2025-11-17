@@ -1,83 +1,256 @@
-# WindowServer Memory Leak Workaround for DockDoor
+# WindowServer Memory Monitor
 
-This project contains a script and a macOS `launchd` agent to automatically monitor the `WindowServer` process for excessive memory usage—a symptom often associated with apps like DockDoor—and restart the application to reclaim the memory.
+<p align="center">
+  <strong>Automatically monitor and mitigate macOS WindowServer memory leaks</strong>
+</p>
 
-This solution works **without requiring `sudo` or root access** by intelligently parsing the output of the `top` command.
+<p align="center">
+  <a href="#the-problem">Problem</a> •
+  <a href="#the-solution">Solution</a> •
+  <a href="#installation">Installation</a> •
+  <a href="#configuration">Configuration</a> •
+  <a href="#usage">Usage</a> •
+  <a href="#troubleshooting">Troubleshooting</a>
+</p>
+
+---
 
 ## The Problem
 
-Certain applications can cause the macOS `WindowServer` process to leak memory over time. The "Memory" column in Activity Monitor shows this value growing, leading to system slowdowns. A common workaround is to periodically quit and restart the application suspected of causing the leak. This agent automates that workaround.
+Do you experience any of these issues on macOS?
+
+- 🐌 System slowdowns and laggy UI after extended use
+- 💾 WindowServer process consuming 4GB, 8GB, or even more RAM
+- 🔄 Need to restart apps like **DockDoor**, **AltTab**, or similar window managers regularly
+- 😤 Frustration with memory leaks that require manual intervention
+
+**You're not alone.** Certain third-party apps that integrate deeply with the macOS window system can trigger memory leaks in the `WindowServer` process, leading to degraded performance over time.
 
 ## The Solution
 
-This solution uses a combination of a Python script and a standard, user-level `launchd` agent:
+This lightweight background service automatically:
 
-1.  **`monitor_dockdoor.py`**: A Python script that runs the `top` command to get the memory usage of `WindowServer` that matches the value shown in Activity Monitor. If it exceeds a predefined threshold (e.g., 4 GB), it gracefully quits and restarts the `DockDoor` application.
-2.  **`com.user.monitordockdoor.plist`**: A `launchd` property list file that configures macOS to run the Python script automatically in the background as the logged-in user. It is set to run upon login and repeat every 10 minutes.
+✅ **Monitors** WindowServer memory usage (matching Activity Monitor values)  
+✅ **Detects** when memory exceeds your configured threshold  
+✅ **Restarts** problematic apps gracefully to reclaim memory  
+✅ **Runs** automatically in the background via macOS `launchd`  
+✅ **Requires** no root/sudo access—runs as your user  
 
-## Files
+### How It Works
 
-- `monitor_dockdoor.py`: The core monitoring and restarting logic (uses `top`).
-- `com.user.monitordockdoor.plist`: The user-level `launchd` agent configuration.
-- `README.md`: This documentation file.
+1. **Python monitoring script** checks WindowServer memory every 10 minutes (configurable)
+2. **Parses `top` output** to get accurate memory readings
+3. **Gracefully quits and restarts** configured apps when threshold is exceeded
+4. **Logs all activity** for transparency and debugging
 
-## Setup
+## Features
 
-The agent has been configured and installed. The steps taken were:
+- 🎯 **Configurable**: Set your own memory threshold and app list
+- 🔒 **Safe**: No sudo required, user-level permissions only
+- 📊 **Transparent**: Full logging to track all actions
+- ⚡ **Lightweight**: Minimal resource usage, checks only every 10 minutes
+- 🔧 **Easy management**: Simple `make install` and `make uninstall`
 
-1.  **Agent Configuration**: The `.plist` file was moved to the user's `LaunchAgents` directory.
-    ```bash
-    mkdir -p ~/Library/LaunchAgents
-    mv com.user.monitordockdoor.plist ~/Library/LaunchAgents/
-    ```
-2.  **Agent Loading**: The `launchd` agent was loaded into the system, starting the monitoring process.
-    ```bash
-    launchctl load ~/Library/LaunchAgents/com.user.monitordockdoor.plist
-    ```
+## Requirements
 
-## Usage and Verification
+- macOS 10.14 or later (tested on macOS 13+)
+- Python 3.6+ (pre-installed on modern macOS)
+- Apps you want to monitor (e.g., DockDoor, AltTab)
 
-The agent runs automatically in the background. You do not need to do anything to start it.
+## Installation
 
-To check if the agent is running and see its output, you can monitor its log file. Open a terminal and run:
+### Option 1: Interactive Wizard (Recommended)
 
-```bash
-tail -f ~/Library/Logs/com.user.monitordockdoor.out.log
-```
-
-You will see a new entry every 10 minutes with the current memory usage of `WindowServer`.
-
-## Managing the Agent
-
-You can manually stop and start the agent at any time.
-
-**To stop the agent:**
+The easiest way to get started:
 
 ```bash
-launchctl unload ~/Library/LaunchAgents/com.user.monitordockdoor.plist
+# Clone the repository
+git clone https://github.com/YOUR_USERNAME/mac-windowserver-memleak-workaround.git
+cd mac-windowserver-memleak-workaround
+
+# Run the interactive installation wizard
+python3 install.py
 ```
 
-**To start the agent again:**
+The wizard will:
+- 🔍 Detect your current WindowServer memory usage
+- 🎯 Help you set an appropriate threshold
+- 🔎 Find installed apps that commonly cause leaks
+- ⚙️  Configure check interval
+- ✅ Install and start the service automatically
+
+### Option 2: Quick Install (Advanced)
+
+If you prefer to configure manually:
 
 ```bash
-launchctl load ~/Library/LaunchAgents/com.user.monitordockdoor.plist
+# Clone the repository
+git clone https://github.com/YOUR_USERNAME/mac-windowserver-memleak-workaround.git
+cd mac-windowserver-memleak-workaround
+
+# Edit config.ini with your settings
+nano config.ini
+
+# Install and start the service
+make install
 ```
 
-The agent will also start automatically on your next login or system reboot.
+That's it! The service is now running in the background.
+
+### What Gets Installed
+
+- **Script**: `~/.config/windowserver_monitor/monitor_dockdoor.py`
+- **Config**: `~/.config/windowserver_monitor/config.ini`
+- **Launch Agent**: `~/Library/LaunchAgents/com.user.windowserver_monitor.plist`
+- **Logs**: `~/Library/Logs/windowserver_monitor.out.log`
 
 ## Configuration
 
-If you need to adjust the settings, you can edit the following files:
+Edit the configuration file to customize behavior:
 
-- **To change the memory threshold**:
-  - Edit the `monitor_dockdoor.py` script.
-  - Change the `MEMORY_THRESHOLD_GB` variable to your desired value in gigabytes.
+```bash
+nano ~/.config/windowserver_monitor/config.ini
+```
 
-- **To change the check interval**:
-  - Edit the `~/Library/LaunchAgents/com.user.monitordockdoor.plist` file.
-  - Find the `StartInterval` key and change the following integer to the desired number of seconds.
-    ```xml
-    <key>StartInterval</key>
-    <integer>600</integer> <!-- 600 seconds = 10 minutes -->
-    ```
-  - After editing the `.plist` file, you must unload and reload the agent for the changes to take effect.
+### Configuration Options
+
+```ini
+[settings]
+# Memory threshold in gigabytes (default: 3.0)
+memory_threshold_gb = 3.0
+
+# Comma-separated list of apps to restart
+# Common culprits: DockDoor, alt-tab, Rectangle, etc.
+apps_to_restart = DockDoor, alt-tab
+```
+
+**After editing**, restart the service:
+
+```bash
+make uninstall && make install
+```
+
+### Adjusting Check Interval
+
+The default check interval is 10 minutes. To change it:
+
+1. Edit `~/Library/LaunchAgents/com.user.windowserver_monitor.plist`
+2. Modify the `StartInterval` value (in seconds)
+3. Reload: `launchctl unload ~/Library/LaunchAgents/com.user.windowserver_monitor.plist && launchctl load ~/Library/LaunchAgents/com.user.windowserver_monitor.plist`
+
+## Usage
+
+### Viewing Logs
+
+Monitor real-time activity:
+
+```bash
+tail -f ~/Library/Logs/windowserver_monitor.out.log
+```
+
+### Manual Test Run
+
+Test the script without installing:
+
+```bash
+python3 monitor_dockdoor.py
+```
+
+### Managing the Service
+
+**Uninstall completely:**
+```bash
+make uninstall
+```
+
+**Reinstall:**
+```bash
+make install
+```
+
+**Check if running:**
+```bash
+launchctl list | grep windowserver_monitor
+```
+
+## How to Verify It's Working
+
+1. **Check the service is loaded:**
+   ```bash
+   launchctl list | grep windowserver_monitor
+   ```
+   You should see `com.user.windowserver_monitor` in the output.
+
+2. **View the logs:**
+   ```bash
+   cat ~/Library/Logs/windowserver_monitor.out.log
+   ```
+   You should see periodic memory checks logged.
+
+3. **Trigger manually** (optional):
+   ```bash
+   launchctl start com.user.windowserver_monitor
+   ```
+
+## Troubleshooting
+
+### The service isn't running
+
+```bash
+# Check if loaded
+launchctl list | grep windowserver_monitor
+
+# If not loaded, reinstall
+make install
+```
+
+### No apps are being restarted despite high memory
+
+- Verify app names in `config.ini` match exactly (case-sensitive)
+- Check apps are actually running
+- Lower the threshold temporarily to test
+
+### Permission denied errors
+
+This script runs as your user—no sudo needed. If you see permission errors, verify:
+```bash
+ls -la ~/.config/windowserver_monitor/
+```
+
+### Can't find Python
+
+Ensure Python 3 is installed:
+```bash
+which python3
+python3 --version
+```
+
+## Contributing
+
+Contributions are welcome! Please feel free to:
+
+- 🐛 Report bugs by opening an issue
+- 💡 Suggest features or improvements
+- 🔧 Submit pull requests
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+## Why This Solution?
+
+- **No kernel extensions** or system modifications
+- **No sudo required** - runs with user permissions
+- **Automatic and hands-off** - set it and forget it
+- **Transparent** - all actions are logged
+- **Customizable** - configure for your specific needs
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+## Acknowledgments
+
+Inspired by the many macOS users experiencing WindowServer memory leaks with third-party window management tools. This solution automates the manual workaround of restarting these apps.
+
+---
+
+**Found this helpful?** ⭐ Star the repo to help others discover it!

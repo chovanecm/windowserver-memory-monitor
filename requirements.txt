@@ -1,0 +1,9 @@
+# No external dependencies required
+# Python 3.6+ (included with macOS 10.14+)
+#
+# This project uses only Python standard library modules:
+# - subprocess
+# - time
+# - re
+# - configparser
+# - os
