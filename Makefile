@@ -25,7 +25,7 @@ install:
 		echo "[settings]" > $(CONFIG_NAME); \
 		echo "memory_threshold_gb = 4.0" >> $(CONFIG_NAME); \
 		echo "apps_to_restart = DockDoor, alt-tab" >> $(CONFIG_NAME); \
-		echo "Default $(CONFIG_NAME) created. Review and adjust as needed." \
+		echo "Default $(CONFIG_NAME) created. Review and adjust as needed."; \
 	fi
 
 	@echo "--- Installation Complete ---"
