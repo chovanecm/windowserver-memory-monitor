@@ -61,6 +61,8 @@ nano config.ini
 make install
 ```
 
+Configuration is stored in `config.ini` in the project directory.
+
 ## Configuration
 
 ```bash
@@ -98,7 +100,7 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ## Acknowledgments
 
-Inspired by the many macOS users experiencing WindowServer memory leaks with third-party window management tools. This solution automates the manual workaround of restarting these apps.
+Created to help macOS users experiencing WindowServer memory leaks from third-party window management and preview tools.
 
 ---
 

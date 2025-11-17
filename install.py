@@ -20,6 +20,9 @@ CYAN = '\033[96m'
 RED = '\033[91m'
 RESET = '\033[0m'
 
+SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
+CONFIG_FILE = os.path.join(SCRIPT_DIR, 'config.ini')
+
 def print_header(text):
     """Print a formatted header."""
     print(f"\n{BOLD}{BLUE}{'=' * 60}{RESET}")
@@ -300,8 +303,8 @@ def main():
     print(f"  {BOLD}Memory Threshold:{RESET}   {memory_threshold_gb:.1f} GB")
     print(f"  {BOLD}Apps to Monitor:{RESET}    {', '.join(selected_apps)}")
     print(f"  {BOLD}Check Interval:{RESET}     Every {interval_minutes} minutes")
-    print(f"  {BOLD}Install Location:{RESET}   ~/.config/windowserver_monitor")
-    print(f"  {BOLD}Log Location:{RESET}       ~/Library/Logs/windowserver_monitor.out.log")
+    print(f"  {BOLD}Script Location:{RESET}    {SCRIPT_DIR}")
+    print(f"  {BOLD}Log Location:{RESET}       ~/Library/Logs/windowserver-monitor.out.log")
     print()
     
     if not get_yes_no("Proceed with installation?", default='y'):
@@ -325,8 +328,8 @@ memory_threshold_gb = {memory_threshold_gb}
 apps_to_restart = {', '.join(selected_apps)}
 """
     
-    # Write config to current directory
-    with open('config.ini', 'w') as f:
+    # Write config to script directory
+    with open(CONFIG_FILE, 'w') as f:
         f.write(config_content)
     
     print_step(1, "Configuration file created")
@@ -350,7 +353,7 @@ apps_to_restart = {', '.join(selected_apps)}
         print_step(3, "Updating check interval")
         
         # Update the plist file with custom interval
-        plist_path = Path.home() / 'Library' / 'LaunchAgents' / 'com.user.windowserver_monitor.plist'
+        plist_path = Path.home() / 'Library' / 'LaunchAgents' / 'cz.chovanecm.windowserver-monitor.plist'
         
         if plist_path.exists():
             with open(plist_path, 'r') as f:
@@ -396,8 +399,8 @@ apps_to_restart = {', '.join(selected_apps)}
     print("📝 Useful commands:")
     print(f"  • View logs:     {CYAN}make logs{RESET}")
     print(f"  • Check status:  {CYAN}make status{RESET}")
-    print(f"  • Test script:   {CYAN}python3 monitor_dockdoor.py --dry-run{RESET}")
-    print(f"  • Edit config:   {CYAN}nano ~/.config/windowserver_monitor/config.ini{RESET}")
+    print(f"  • Test script:   {CYAN}python3 monitor_windowserver.py --dry-run{RESET}")
+    print(f"  • Edit config:   {CYAN}nano config.ini{RESET}")
     print(f"  • Uninstall:     {CYAN}make uninstall{RESET}")
     print()
     

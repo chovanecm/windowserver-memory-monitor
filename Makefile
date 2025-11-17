@@ -1,13 +1,14 @@
 .PHONY: install uninstall test status logs help wizard
 
 # --- Configuration ---
-INSTALL_DIR = $(HOME)/.config/windowserver_monitor
-PLIST_NAME = com.user.windowserver_monitor.plist
+SCRIPT_DIR := $(shell pwd)
+PLIST_NAME = cz.chovanecm.windowserver-monitor.plist
 PLIST_DEST = $(HOME)/Library/LaunchAgents/$(PLIST_NAME)
 PYTHON_PATH := $(shell which python3)
-SCRIPT_PATH = $(INSTALL_DIR)/monitor_dockdoor.py
-LOG_FILE = $(HOME)/Library/Logs/windowserver_monitor.out.log
-ERR_LOG_FILE = $(HOME)/Library/Logs/windowserver_monitor.err.log
+SCRIPT_PATH = $(SCRIPT_DIR)/monitor_windowserver.py
+CONFIG_PATH = $(SCRIPT_DIR)/config.ini
+LOG_FILE = $(HOME)/Library/Logs/windowserver-monitor.out.log
+ERR_LOG_FILE = $(HOME)/Library/Logs/windowserver-monitor.err.log
 
 # --- Targets ---
 
@@ -38,21 +39,15 @@ install:
 	fi
 	@echo "✓ Found Python 3 at: $(PYTHON_PATH)"
 	@echo ""
-	@echo "1️⃣  Creating install directory..."
-	@mkdir -p $(INSTALL_DIR)
-	@echo "   → $(INSTALL_DIR)"
-	@echo ""
-	@echo "2️⃣  Copying script and config..."
-	@cp monitor_dockdoor.py $(INSTALL_DIR)/
-	@chmod +x $(INSTALL_DIR)/monitor_dockdoor.py
-	@if [ ! -f "$(INSTALL_DIR)/config.ini" ]; then \
-		cp config.ini $(INSTALL_DIR)/; \
-		echo "   → Created default config.ini"; \
-	else \
-		echo "   → Preserving existing config.ini"; \
+	@echo "1️⃣  Checking configuration..."
+	@if [ ! -f "$(CONFIG_PATH)" ]; then \
+		echo "❌ config.ini not found. Please create it first."; \
+		exit 1; \
 	fi
+	@chmod +x $(SCRIPT_PATH)
+	@echo "   → Using config at: $(CONFIG_PATH)"
 	@echo ""
-	@echo "3️⃣  Generating launchd agent..."
+	@echo "2️⃣  Generating launchd agent..."
 	@echo '<?xml version="1.0" encoding="UTF-8"?>' > $(PLIST_NAME)
 	@echo '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' >> $(PLIST_NAME)
 	@echo '<plist version="1.0">' >> $(PLIST_NAME)
@@ -77,7 +72,7 @@ install:
 	@echo '</plist>' >> $(PLIST_NAME)
 	@echo "   → $(PLIST_NAME)"
 	@echo ""
-	@echo "4️⃣  Installing and loading agent..."
+	@echo "3️⃣  Installing and loading agent..."
 	@mkdir -p $(HOME)/Library/LaunchAgents
 	@mkdir -p $(HOME)/Library/Logs
 	@cp $(PLIST_NAME) $(PLIST_DEST)
@@ -92,11 +87,11 @@ install:
 	@echo ""
 	@echo "The service is now active and will check every 10 minutes."
 	@echo ""
-	@echo "📝 Configuration: $(INSTALL_DIR)/config.ini"
+	@echo "📝 Configuration: $(CONFIG_PATH)"
 	@echo "📊 Logs:          $(LOG_FILE)"
 	@echo ""
 	@echo "Next steps:"
-	@echo "  • Edit config:  nano $(INSTALL_DIR)/config.ini"
+	@echo "  • Edit config:  nano config.ini"
 	@echo "  • View logs:    make logs"
 	@echo "  • Check status: make status"
 	@echo "  • Test script:  make test"
@@ -117,13 +112,7 @@ uninstall:
 	@rm -f $(PLIST_DEST)
 	@echo "   → Agent file removed"
 	@echo ""
-	@echo "2️⃣  Removing installed files..."
-	@if [ -d "$(INSTALL_DIR)" ]; then \
-		rm -rf $(INSTALL_DIR); \
-		echo "   → Removed $(INSTALL_DIR)"; \
-	else \
-		echo "   → Install directory not found"; \
-	fi
+	@echo "Note: config.ini in your project directory is preserved."
 	@echo ""
 	@echo "╔════════════════════════════════════════════════════════╗"
 	@echo "║           ✓ Uninstallation Complete!                  ║"
@@ -144,7 +133,7 @@ test:
 	fi
 	@echo "Running test with --dry-run and --verbose..."
 	@echo ""
-	@$(PYTHON_PATH) monitor_dockdoor.py --dry-run --verbose
+	@$(PYTHON_PATH) monitor_windowserver.py --dry-run --verbose
 	@echo ""
 	@echo "✓ Test complete (no apps were restarted)"
 	@echo ""
@@ -164,9 +153,9 @@ status:
 		echo "To start: make install"; \
 	fi
 	@echo ""
-	@if [ -f "$(INSTALL_DIR)/config.ini" ]; then \
+	@if [ -f "$(CONFIG_PATH)" ]; then \
 		echo "Configuration:"; \
-		grep -E "^(memory_threshold_gb|apps_to_restart)" $(INSTALL_DIR)/config.ini | sed 's/^/  /'; \
+		grep -E "^(memory_threshold_gb|apps_to_restart)" $(CONFIG_PATH) | sed 's/^/  /'; \
 	fi
 	@echo ""
 

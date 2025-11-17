@@ -56,7 +56,7 @@ git clone https://github.com/YOUR_USERNAME/mac-windowserver-memleak-workaround.g
 cd mac-windowserver-memleak-workaround
 
 # Test the script
-python3 monitor_dockdoor.py --dry-run --verbose
+python3 monitor_windowserver.py --dry-run --verbose
 
 # Make changes and test again
 ```
