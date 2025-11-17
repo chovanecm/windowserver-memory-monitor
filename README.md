@@ -1,111 +1,100 @@
+
 # WindowServer Memory Monitor
 
-**Automatically monitor and mitigate macOS WindowServer memory leaks**
+Automatically monitor and mitigate macOS WindowServer memory leaks.
 
 ---
 
-## The Problem
+## 🚀 Quick Start (Recommended)
 
-Do you experience any of these issues on macOS?
+```bash
+git clone https://github.com/YOUR_USERNAME/mac-windowserver-memleak-workaround.git
+cd mac-windowserver-memleak-workaround
+make wizard      # Interactive setup (recommended)
+make status      # Check service status (see below)
+make logs        # View recent logs
+```
 
-- 🐌 System slowdowns and laggy UI after extended use
-- 💾 WindowServer process consuming 4GB, 8GB, or even more RAM
-- 🔄 Need to restart apps like **DockDoor**, **AltTab**, or similar window managers regularly
-- 😤 Frustration with memory leaks that require manual intervention
+## What Does This Do?
 
-**You're not alone.** Certain third-party apps that integrate deeply with the macOS window system can trigger memory leaks in the `WindowServer` process, leading to degraded performance over time.
+This tool runs a background check (every 10 minutes) on your Mac’s WindowServer memory usage. If it gets too high, it automatically restarts the apps you specify—no root required.
 
-## The Solution
+**Typical symptoms:**
+- System slowdowns, laggy UI
+- WindowServer using 4GB+ RAM
+- Need to restart window managers (DockDoor, AltTab, etc.)
 
-This lightweight background service automatically:
+## How It Works
 
-✅ **Monitors** WindowServer memory usage (matching Activity Monitor values)  
-✅ **Detects** when memory exceeds your configured threshold  
-✅ **Restarts** problematic apps gracefully to reclaim memory  
-✅ **Runs** automatically in the background via macOS `launchd`  
-✅ **Requires** no root/sudo access—runs as your user  
-
-### How It Works
-
-1. **Python monitoring script** checks WindowServer memory every 10 minutes (configurable)
-2. **Parses `top` output** to get accurate memory readings
-3. **Gracefully quits and restarts** configured apps when threshold is exceeded
-4. **Logs all activity** for transparency and debugging
-
-## Features
-
-- 🎯 **Configurable**: Set your own memory threshold and app list
-- 🔒 **Safe**: No sudo required, user-level permissions only
-- 📊 **Transparent**: Full logging to track all actions
-- ⚡ **Lightweight**: Minimal resource usage, checks only every 10 minutes
-- 🔧 **Easy management**: Simple `make install` and `make uninstall`
+1. A Python script checks WindowServer memory every 10 minutes (configurable)
+2. If usage exceeds your threshold, it restarts the apps you list in `config.ini`
+3. All actions are logged for transparency
+4. Managed by macOS `launchd` (user-level, no sudo)
 
 ## Requirements
 
 - macOS 10.14 or later (tested on macOS 13+)
-- Python 3.6+ (pre-installed on modern macOS)
-- Apps you want to monitor (e.g., DockDoor, AltTab)
+- Python 3.6+ (pre-installed on most Macs)
 
-## Installation
+## Installation & Configuration
+
+### Option 1: Interactive Wizard (Recommended)
 
 ```bash
-# Clone the repository
-git clone https://github.com/YOUR_USERNAME/mac-windowserver-memleak-workaround.git
-cd mac-windowserver-memleak-workaround
+make wizard
+# Follows prompts to set up config.ini and install the service
+```
 
-# Option 1: Run the interactive wizard (recommended)
-python3 install.py
+### Option 2: Manual Setup
 
-# Option 2: Manual configuration
+```bash
 cp config.example.ini config.ini
-nano config.ini
+nano config.ini   # Edit threshold and app list
 make install
 ```
 
 Your `config.ini` is gitignored and stays local to your machine.
 
-## Configuration
-
-Edit `config.ini` in the project directory:
-
-```bash
-nano config.ini
-```
-
+#### Example config.ini
 ```ini
 [settings]
 memory_threshold_gb = 3.0
 apps_to_restart = DockDoor, alt-tab
 ```
 
-After editing: `make uninstall && make install`
-
-## Usage
+## Usage & Management
 
 ```bash
-make logs          # View logs
-make status        # Check if running
-make test          # Test without installing
-make uninstall     # Remove service
+make status      # Check if service is installed (see note below)
+make logs        # Show last 30 lines of logs
+make test        # Run a dry test (no apps restarted)
+make uninstall   # Remove the service
+make reload      # Reload config after editing config.ini
 ```
 
-## Common Issues
+### ⚠️ Service Status Explained
 
-### Service not running
-```bash
-make status        # Check status
-make install       # Reinstall if needed
-```
+This tool runs **periodically** (every 10 minutes) and then exits. `make status` checks if the launchd job is installed—not if it’s running right now. If you see:
 
-### Apps not restarting
-- Verify app names match exactly (case-sensitive)
-- Check apps are installed in `/Applications`
-- Lower threshold temporarily to test
+- `Service is RUNNING`: The launchd job is installed and will run as scheduled.
+- `Service is NOT running`: The job may be installed but not currently executing (normal for periodic jobs). If you just installed, wait up to 10 minutes for the first run.
 
-### Testing
-```bash
-python3 monitor_windowserver.py --dry-run --verbose
-```
+## Updating Configuration
+
+1. Edit `config.ini` (change threshold or app list)
+2. Run `make reload` to apply changes
+
+## Troubleshooting
+
+- **Apps not restarting?**
+	- App names must match exactly (case-sensitive, as in /Applications)
+	- Lower the threshold to test
+	- Check logs with `make logs`
+- **Service not running?**
+	- Run `make install` or `make wizard` again
+	- Wait up to 10 minutes for the first run
+- **Manual test:**
+	- `python3 monitor_windowserver.py --dry-run --verbose`
 
 ## Contributing
 
@@ -114,10 +103,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 ## License
 
 MIT License - see [LICENSE](LICENSE) for details.
-
-## Acknowledgments
-
-Created to help macOS users experiencing WindowServer memory leaks from third-party window management and preview tools.
 
 ---
 

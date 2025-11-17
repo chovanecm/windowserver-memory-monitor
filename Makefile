@@ -1,4 +1,4 @@
-.PHONY: install uninstall test status logs help wizard
+.PHONY: install uninstall test status logs help wizard reload
 
 # --- Configuration ---
 SCRIPT_DIR := $(shell pwd)
@@ -18,13 +18,23 @@ help:
 	@echo "WindowServer Memory Monitor - Makefile Commands"
 	@echo "================================================"
 	@echo ""
-	@echo "  make wizard     - Run interactive installation wizard (recommended)"
-	@echo "  make install    - Install and start the service"
+	@echo "  make wizard     - Run interactive installation wizard (RECOMMENDED)"
+	@echo "  make install    - Install and start the service (manual)"
+	@echo "  make reload     - Reload config after editing config.ini"
 	@echo "  make uninstall  - Stop and remove the service"
 	@echo "  make test       - Test the script without installing"
-	@echo "  make status     - Check if service is running"
+	@echo "  make status     - Check if service is installed (see README for periodic status explanation)"
 	@echo "  make logs       - Show recent logs"
 	@echo "  make help       - Show this help message"
+	@echo ""
+reload:
+	@echo "╔════════════════════════════════════════════════════════╗"
+	@echo "║   Reloading WindowServer Monitor Config               ║"
+	@echo "╚════════════════════════════════════════════════════════╝"
+	@echo ""
+	@launchctl unload $(PLIST_DEST) 2>/dev/null || true
+	@launchctl load $(PLIST_DEST)
+	@echo "✓ Config reloaded. Next run will use updated config.ini."
 	@echo ""
 
 install:
@@ -144,17 +154,15 @@ test:
 
 status:
 	@echo "╔════════════════════════════════════════════════════════╗"
-	@echo "║            Service Status Check                        ║"
+	@echo "║            Service Status Check                       ║"
 	@echo "╚════════════════════════════════════════════════════════╝"
 	@echo ""
 	@if launchctl list | grep -q "$(basename $(PLIST_NAME) .plist)"; then \
-		echo "✓ Service is RUNNING"; \
-		echo ""; \
+		echo "✓ Service is INSTALLED (launchd job present)"; \
 		launchctl list | grep "$(basename $(PLIST_NAME) .plist)"; \
 	else \
-		echo "✗ Service is NOT running"; \
-		echo ""; \
-		echo "To start: make install"; \
+		echo "Service is NOT INSTALLED (launchd job missing)"; \
+		echo "To install: make install"; \
 	fi
 	@echo ""
 	@if [ -f "$(CONFIG_PATH)" ]; then \
