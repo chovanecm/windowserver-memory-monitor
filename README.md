@@ -66,8 +66,10 @@ Your `config.ini` is gitignored and stays local to your machine.
 
 ## Configuration
 
+Edit `config.ini` in the project directory:
+
 ```bash
-nano ~/.config/windowserver_monitor/config.ini
+nano config.ini
 ```
 
 ```ini
@@ -87,9 +89,23 @@ make test          # Test without installing
 make uninstall     # Remove service
 ```
 
-## Troubleshooting
+## Common Issues
 
-See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for detailed help with common issues.
+### Service not running
+```bash
+make status        # Check status
+make install       # Reinstall if needed
+```
+
+### Apps not restarting
+- Verify app names match exactly (case-sensitive)
+- Check apps are installed in `/Applications`
+- Lower threshold temporarily to test
+
+### Testing
+```bash
+python3 monitor_windowserver.py --dry-run --verbose
+```
 
 ## Contributing
 
