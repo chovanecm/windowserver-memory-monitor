@@ -55,37 +55,34 @@ install:
 	@echo "   → Using config at: $(CONFIG_PATH)"
 	@echo ""
 	@echo "2️⃣  Generating launchd agent..."
-	@echo '<?xml version="1.0" encoding="UTF-8"?>' > $(PLIST_NAME)
-	@echo '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' >> $(PLIST_NAME)
-	@echo '<plist version="1.0">' >> $(PLIST_NAME)
-	@echo '<dict>' >> $(PLIST_NAME)
-	@echo '    <key>Label</key>' >> $(PLIST_NAME)
-	@echo '    <string>$(PLIST_NAME)</string>' >> $(PLIST_NAME)
-	@echo '    <key>ProgramArguments</key>' >> $(PLIST_NAME)
-	@echo '    <array>' >> $(PLIST_NAME)
-	@echo '        <string>$(PYTHON_PATH)</string>' >> $(PLIST_NAME)
-	@echo '        <string>$(SCRIPT_PATH)</string>' >> $(PLIST_NAME)
-	@echo '    </array>' >> $(PLIST_NAME)
-	@echo '    <key>RunAtLoad</key>' >> $(PLIST_NAME)
-	@echo '    <key>RunAtLoad</key>' >> $(PLIST_NAME)
-	@echo '    <true/>' >> $(PLIST_NAME)
-	@echo '    <key>StartInterval</key>' >> $(PLIST_NAME)
-	@echo '    <integer>600</integer>' >> $(PLIST_NAME)
-	@echo '    <key>StandardOutPath</key>' >> $(PLIST_NAME)
-	@echo '    <string>$(LOG_FILE)</string>' >> $(PLIST_NAME)
-	@echo '    <key>StandardErrorPath</key>' >> $(PLIST_NAME)
-	@echo '    <string>$(ERR_LOG_FILE)</string>' >> $(PLIST_NAME)
-	@echo '</dict>' >> $(PLIST_NAME)
-	@echo '</plist>' >> $(PLIST_NAME)
-	@echo "   → $(PLIST_NAME)"
+	@echo '<?xml version="1.0" encoding="UTF-8"?>' > $(PLIST_DEST)
+	@echo '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' >> $(PLIST_DEST)
+	@echo '<plist version="1.0">' >> $(PLIST_DEST)
+	@echo '<dict>' >> $(PLIST_DEST)
+	@echo '    <key>Label</key>' >> $(PLIST_DEST)
+	@echo '    <string>cz.chovanecm.windowserver-monitor</string>' >> $(PLIST_DEST)
+	@echo '    <key>ProgramArguments</key>' >> $(PLIST_DEST)
+	@echo '    <array>' >> $(PLIST_DEST)
+	@echo '        <string>$(PYTHON_PATH)</string>' >> $(PLIST_DEST)
+	@echo '        <string>$(SCRIPT_PATH)</string>' >> $(PLIST_DEST)
+	@echo '    </array>' >> $(PLIST_DEST)
+	@echo '    <key>RunAtLoad</key>' >> $(PLIST_DEST)
+	@echo '    <true/>' >> $(PLIST_DEST)
+	@echo '    <key>StartInterval</key>' >> $(PLIST_DEST)
+	@echo '    <integer>600</integer>' >> $(PLIST_DEST)
+	@echo '    <key>StandardOutPath</key>' >> $(PLIST_DEST)
+	@echo '    <string>$(LOG_FILE)</string>' >> $(PLIST_DEST)
+	@echo '    <key>StandardErrorPath</key>' >> $(PLIST_DEST)
+	@echo '    <string>$(ERR_LOG_FILE)</string>' >> $(PLIST_DEST)
+	@echo '</dict>' >> $(PLIST_DEST)
+	@echo '</plist>' >> $(PLIST_DEST)
+	@echo "   → $(PLIST_DEST)"
 	@echo ""
 	@echo "3️⃣  Installing and loading agent..."
 	@mkdir -p $(HOME)/Library/LaunchAgents
 	@mkdir -p $(HOME)/Library/Logs
-	@cp $(PLIST_NAME) $(PLIST_DEST)
 	@launchctl unload $(PLIST_DEST) 2>/dev/null || true
 	@launchctl load $(PLIST_DEST)
-	@rm $(PLIST_NAME)
 	@echo "   → Agent loaded successfully"
 	@echo ""
 	@echo "╔════════════════════════════════════════════════════════╗"
