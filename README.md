@@ -53,15 +53,16 @@ This lightweight background service automatically:
 git clone https://github.com/YOUR_USERNAME/mac-windowserver-memleak-workaround.git
 cd mac-windowserver-memleak-workaround
 
-# Run the interactive wizard (recommended)
+# Option 1: Run the interactive wizard (recommended)
 python3 install.py
 
-# Or manually configure and install
+# Option 2: Manual configuration
+cp config.example.ini config.ini
 nano config.ini
 make install
 ```
 
-Configuration is stored in `config.ini` in the project directory.
+Your `config.ini` is gitignored and stays local to your machine.
 
 ## Configuration
 

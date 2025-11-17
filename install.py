@@ -329,7 +329,8 @@ apps_to_restart = {', '.join(selected_apps)}
 """
     
     # Write config to script directory
-    with open(CONFIG_FILE, 'w') as f:
+    config_path = os.path.join(SCRIPT_DIR, 'config.ini')
+    with open(config_path, 'w') as f:
         f.write(config_content)
     
     print_step(1, "Configuration file created")

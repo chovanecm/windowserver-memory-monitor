@@ -61,7 +61,7 @@ Temporary Items
 *.plist
 
 # Local config overrides
-config.local.ini
+config.ini
 
 # Testing
 .pytest_cache/

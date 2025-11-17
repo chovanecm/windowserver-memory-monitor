@@ -41,8 +41,15 @@ install:
 	@echo ""
 	@echo "1️⃣  Checking configuration..."
 	@if [ ! -f "$(CONFIG_PATH)" ]; then \
-		echo "❌ config.ini not found. Please create it first."; \
-		exit 1; \
+		if [ -f "config.example.ini" ]; then \
+			cp config.example.ini $(CONFIG_PATH); \
+			echo "   → Created config.ini from config.example.ini"; \
+			echo "   ⚠️  Please edit config.ini before proceeding"; \
+			exit 1; \
+		else \
+			echo "❌ Neither config.ini nor config.example.ini found"; \
+			exit 1; \
+		fi; \
 	fi
 	@chmod +x $(SCRIPT_PATH)
 	@echo "   → Using config at: $(CONFIG_PATH)"
