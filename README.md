@@ -1,8 +1,8 @@
 
-
 # WindowServer Memory Monitor
 
 Automatically monitor and mitigate macOS WindowServer memory leaks.
+
 
 ---
 
@@ -25,13 +25,12 @@ This tool automates that process: it watches WindowServer’s memory, and when i
 ## 🚀 Quick Start (Recommended)
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/mac-windowserver-memleak-workaround.git
-cd mac-windowserver-memleak-workaround
+git clone https://github.com/chovanecm/windowserver-memory-monitor.git
+cd windowserver-memory-monitor
 make wizard      # Interactive setup (recommended)
 make status      # Check service status (see below)
 make logs        # View recent logs
 ```
-
 
 ## What Does This Do?
 
@@ -40,6 +39,7 @@ This tool runs a background check (every 10 minutes) on your Mac’s WindowServe
 **Who is this for?**
 - Anyone who uses third-party window managers or preview tools and suffers from WindowServer memory leaks.
 - Anyone tired of manually quitting and restarting apps to fix slowdowns.
+
 
 ## How It Works
 
