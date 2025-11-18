@@ -26,16 +26,18 @@ jobs:
     - name: Verify help text works
       run: python3 monitor_windowserver.py --help
     
+    - name: Create test config
+      run: cp config.example.ini config.ini
+    
     - name: Test dry-run mode
-      run: python3 monitor_windowserver.py --dry-run --verbose || true
-      # Note: Will fail without config.ini, but tests argument parsing
+      run: python3 monitor_windowserver.py --dry-run --verbose
     
     - name: Check file structure
       run: |
         test -f README.md
         test -f LICENSE
         test -f CONTRIBUTING.md
-        test -f config.ini
+        test -f config.example.ini
         test -f Makefile
         echo "✓ All required files present"
     
