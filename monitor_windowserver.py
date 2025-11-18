@@ -205,39 +205,49 @@ def restart_apps(app_names: List[str], dry_run: bool = False) -> None:
             logger.info(f"[DRY RUN] Would quit and restart '{app_name}'")
             continue
         
+        # Step 1: Try to quit the app
+        quit_succeeded = False
         try:
-            # Try to quit the app gracefully
             quit_command = f'quit app "{app_name}"'
             result = subprocess.run(
                 ['osascript', '-e', quit_command],
                 capture_output=True,
                 text=True,
-                timeout=10
+                timeout=30  # Increased timeout for quit
             )
             
             if result.returncode == 0:
                 logger.info(f"Sent quit command to '{app_name}'")
+                quit_succeeded = True
             else:
                 logger.debug(f"Quit command returned code {result.returncode} (app may not be running)")
             
-            time.sleep(3)  # Give app time to quit
-
-            # Try to start the app
+        except subprocess.TimeoutExpired:
+            logger.warning(f"Timeout waiting for '{app_name}' to quit (continuing with restart anyway)")
+        except FileNotFoundError:
+            logger.error("'osascript' command not found. This script requires macOS.")
+            break
+        
+        # Wait for app to fully quit
+        time.sleep(5)
+        
+        # Step 2: Try to start the app (always attempt, even if quit failed/timed out)
+        try:
             subprocess.run(
                 ['open', '-a', app_name],
                 check=True,
                 capture_output=True,
-                timeout=10
+                timeout=20  # Increased timeout for launch
             )
             logger.info(f"✓ Successfully restarted '{app_name}'")
-
+            
         except subprocess.TimeoutExpired:
-            logger.error(f"Timeout while processing '{app_name}'")
+            logger.error(f"Timeout waiting for '{app_name}' to launch")
         except subprocess.CalledProcessError as e:
             logger.warning(f"Application '{app_name}' not found or could not be started. Skipping.")
             logger.debug(f"Error details: {e}")
         except FileNotFoundError:
-            logger.error("'osascript' or 'open' command not found. This script requires macOS.")
+            logger.error("'open' command not found. This script requires macOS.")
             break
 
 def main(dry_run: bool = False, verbose: bool = False) -> int:
@@ -274,9 +284,10 @@ def main(dry_run: bool = False, verbose: bool = False) -> int:
         return 1
 
     memory_usage_gb = memory_usage_bytes / (1024**3)
+    threshold_exceeded = memory_usage_bytes > memory_threshold_bytes
 
-    # Check threshold and take action
-    if memory_usage_bytes > memory_threshold_bytes:
+    # Log banner and details when verbose OR when action is needed
+    if verbose or threshold_exceeded:
         logger.info(f"WindowServer Memory Monitor v{VERSION}")
         logger.info("=" * 60)
         logger.info(f"Memory threshold: {memory_threshold_gb:.1f} GB")
@@ -284,6 +295,10 @@ def main(dry_run: bool = False, verbose: bool = False) -> int:
         if dry_run:
             logger.info("DRY RUN MODE - No apps will be restarted")
         logger.info("-" * 60)
+        logger.info(f"'{PROCESS_NAME}' memory usage: {memory_usage_gb:.2f} GB")
+
+    # Check threshold and take action
+    if threshold_exceeded:
         logger.warning(f"⚠️  ALERT: WindowServer memory ({memory_usage_gb:.2f} GB) exceeds threshold ({memory_threshold_gb:.1f} GB)")
         restart_apps(apps_to_restart, dry_run)
         logger.info("=" * 60)
@@ -291,6 +306,9 @@ def main(dry_run: bool = False, verbose: bool = False) -> int:
         return 0
     else:
         # Silent success - no action needed
+        if verbose:
+            logger.info(f"✓ Memory usage is within acceptable limit (under {memory_threshold_gb:.1f} GB)")
+            logger.info("=" * 60)
         return 0
 
 if __name__ == "__main__":
