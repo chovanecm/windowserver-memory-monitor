@@ -254,23 +254,12 @@ def main(dry_run: bool = False, verbose: bool = False) -> int:
     global logger
     logger = setup_logging(verbose)
     
-    logger.info(f"WindowServer Memory Monitor v{VERSION}")
-    logger.info("=" * 60)
-    
     try:
         memory_threshold_gb, apps_to_restart = read_config()
     except SystemExit:
         return 1
     
     memory_threshold_bytes = memory_threshold_gb * 1024**3
-
-    logger.info(f"Memory threshold: {memory_threshold_gb:.1f} GB")
-    logger.info(f"Apps to monitor: {', '.join(apps_to_restart)}")
-    
-    if dry_run:
-        logger.info("DRY RUN MODE - No apps will be restarted")
-    
-    logger.info("-" * 60)
     
     # Get WindowServer PID
     pid = get_process_pid(PROCESS_NAME)
@@ -285,19 +274,23 @@ def main(dry_run: bool = False, verbose: bool = False) -> int:
         return 1
 
     memory_usage_gb = memory_usage_bytes / (1024**3)
-    logger.info(f"'{PROCESS_NAME}' memory usage: {memory_usage_gb:.2f} GB")
 
     # Check threshold and take action
     if memory_usage_bytes > memory_threshold_bytes:
-        logger.warning(f"⚠️  ALERT: Memory usage ({memory_usage_gb:.2f} GB) exceeds threshold ({memory_threshold_gb:.1f} GB)")
+        logger.info(f"WindowServer Memory Monitor v{VERSION}")
+        logger.info("=" * 60)
+        logger.info(f"Memory threshold: {memory_threshold_gb:.1f} GB")
+        logger.info(f"Apps to monitor: {', '.join(apps_to_restart)}")
+        if dry_run:
+            logger.info("DRY RUN MODE - No apps will be restarted")
+        logger.info("-" * 60)
+        logger.warning(f"⚠️  ALERT: WindowServer memory ({memory_usage_gb:.2f} GB) exceeds threshold ({memory_threshold_gb:.1f} GB)")
         restart_apps(apps_to_restart, dry_run)
         logger.info("=" * 60)
         logger.info("Check complete - Actions taken")
         return 0
     else:
-        logger.info(f"✓ Memory usage is within acceptable limit (under {memory_threshold_gb:.1f} GB)")
-        logger.info("=" * 60)
-        logger.info("Check complete - No action needed")
+        # Silent success - no action needed
         return 0
 
 if __name__ == "__main__":
