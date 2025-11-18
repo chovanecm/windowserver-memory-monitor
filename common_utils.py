@@ -5,7 +5,7 @@ Common utilities shared between WindowServer monitoring scripts.
 
 import subprocess
 import re
-from typing import Optional
+from typing import Optional, List
 
 
 def get_process_pid(process_name: str, timeout: int = 5) -> Optional[str]:
@@ -32,7 +32,7 @@ def get_process_pid(process_name: str, timeout: int = 5) -> Optional[str]:
         return None
 
 
-def parse_memory_from_top_output(lines: list[str]) -> Optional[int]:
+def parse_memory_from_top_output(lines: List[str]) -> Optional[int]:
     """
     Parse memory usage from 'top' command output.
     

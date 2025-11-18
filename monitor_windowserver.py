@@ -33,7 +33,8 @@ def setup_logging(verbose: bool = False) -> logging.Logger:
     logging.basicConfig(
         format='%(asctime)s [%(levelname)s] %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S',
-        level=log_level
+        level=log_level,
+        stream=sys.stdout  # Route logs to stdout instead of stderr
     )
     return logging.getLogger(__name__)
 
@@ -94,9 +95,40 @@ def get_process_memory(process_name: str) -> Optional[int]:
     
     memory_bytes = get_memory_from_top(pid)
     if memory_bytes is None:
-        logger.error(f"Could not determine memory usage for '{process_name}'.")
+        logger.warning(f"Could not determine memory usage for '{process_name}'.")
     
     return memory_bytes
+
+def wait_for_app_termination(app_name: str, timeout: int = 10) -> bool:
+    """
+    Wait for an application to fully terminate.
+    
+    Args:
+        app_name: Name of the application to wait for
+        timeout: Maximum time to wait in seconds
+    
+    Returns:
+        True if app terminated, False if timeout reached
+    """
+    start_time = time.time()
+    while time.time() - start_time < timeout:
+        # Check if any process with this app name is still running
+        try:
+            result = subprocess.run(
+                ['pgrep', '-i', app_name],
+                capture_output=True,
+                timeout=2
+            )
+            # If pgrep returns non-zero, no process found (app terminated)
+            if result.returncode != 0:
+                return True
+            # Process still running, wait a bit before checking again
+            time.sleep(0.5)
+        except subprocess.TimeoutExpired:
+            logger.debug(f"Timeout checking for {app_name} termination")
+            time.sleep(0.5)
+    
+    return False
 
 def restart_apps(app_names: List[str], dry_run: bool = False) -> None:
     """
@@ -137,7 +169,15 @@ def restart_apps(app_names: List[str], dry_run: bool = False) -> None:
             break
         
         # Wait for app to fully quit
-        time.sleep(5)
+        if quit_succeeded:
+            logger.debug(f"Waiting for '{app_name}' to terminate...")
+            if wait_for_app_termination(app_name, timeout=10):
+                logger.debug(f"'{app_name}' has terminated")
+            else:
+                logger.warning(f"'{app_name}' did not terminate within 10 seconds")
+        else:
+            # If quit didn't succeed, still wait a bit for any cleanup
+            time.sleep(2)
         
         # Step 2: Try to start the app (always attempt, even if quit failed/timed out)
         # Use launchctl asuser to ensure we run in user GUI context (needed for launchd)
@@ -154,12 +194,14 @@ def restart_apps(app_names: List[str], dry_run: bool = False) -> None:
             
             # If launchctl asuser fails, fall back to direct open
             if result.returncode != 0:
-                subprocess.run(
+                logger.debug(f"launchctl asuser failed, trying direct open for '{app_name}'")
+                result = subprocess.run(
                     ['open', '-a', app_name],
-                    check=True,
                     capture_output=True,
                     timeout=20
                 )
+                if result.returncode != 0:
+                    raise subprocess.CalledProcessError(result.returncode, 'open', result.stderr)
             
             logger.info(f"✓ Successfully restarted '{app_name}'")
             
@@ -221,10 +263,13 @@ def main(dry_run: bool = False, verbose: bool = False) -> int:
         logger.info("Check complete - Actions taken")
         return 0
     else:
-        # Silent success - no action needed
+        # Log minimal success message for observability
         if verbose:
             logger.info(f"✓ Memory usage is within acceptable limit (under {memory_threshold_gb:.1f} GB)")
             logger.info("=" * 60)
+        else:
+            # Minimal logging even in non-verbose mode
+            logger.info(f"OK - WindowServer: {memory_usage_gb:.2f} GB / {memory_threshold_gb:.1f} GB")
         return 0
 
 if __name__ == "__main__":
