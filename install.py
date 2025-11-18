@@ -10,6 +10,7 @@ import sys
 import subprocess
 import re
 from pathlib import Path
+from common_utils import get_process_pid, get_memory_from_top
 
 # ANSI color codes
 BOLD = '\033[1m'
@@ -100,51 +101,16 @@ def validate_integer(value):
         return False, "Please enter a valid integer"
 
 def get_windowserver_memory():
-    """Get current WindowServer memory usage."""
-    try:
-        result = subprocess.run(['pgrep', '-n', 'WindowServer'], 
-                              capture_output=True, text=True, timeout=5)
-        if result.returncode != 0:
-            return None
-        
-        pid = result.stdout.strip()
-        result = subprocess.run(['top', '-l', '1', '-pid', pid], 
-                              capture_output=True, text=True, timeout=10)
-        
-        lines = result.stdout.strip().split('\n')
-        header_index = next((i for i, line in enumerate(lines) 
-                           if 'PID' in line and 'COMMAND' in line), -1)
-        
-        if header_index == -1 or header_index + 1 >= len(lines):
-            return None
-        
-        headers = re.split(r'\s+', lines[header_index].strip())
-        mem_column_index = next((i for i, h in enumerate(headers) if h == 'MEM'), -1)
-        
-        if mem_column_index == -1:
-            return None
-        
-        process_line = lines[header_index + 1].strip()
-        process_data = re.split(r'\s+', process_line)
-        mem_str = process_data[mem_column_index]
-        
-        value_match = re.match(r'(\d+\.?\d*)', mem_str)
-        if not value_match:
-            return None
-        
-        value = float(value_match.group(1))
-        unit = mem_str[-1].upper() if len(mem_str) > len(value_match.group(1)) else ''
-        
-        if unit == 'K':
-            return value / 1024 / 1024  # Convert to GB
-        elif unit == 'M':
-            return value / 1024
-        elif unit == 'G':
-            return value
-        else:
-            return value / 1024 / 1024 / 1024
-    except:
+    """Get current WindowServer memory usage in GB."""
+    pid = get_process_pid('WindowServer')
+    if not pid:
         return None
+    
+    memory_bytes = get_memory_from_top(pid)
+    if memory_bytes is None:
+        return None
+    
+    return memory_bytes / (1024**3)
 
 def find_common_apps():
     """Find commonly installed apps that might cause WindowServer leaks."""
