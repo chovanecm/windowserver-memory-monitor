@@ -140,13 +140,27 @@ def restart_apps(app_names: List[str], dry_run: bool = False) -> None:
         time.sleep(5)
         
         # Step 2: Try to start the app (always attempt, even if quit failed/timed out)
+        # Use launchctl asuser to ensure we run in user GUI context (needed for launchd)
         try:
-            subprocess.run(
-                ['open', '-a', app_name],
-                check=True,
+            # Get the user ID for launchctl asuser
+            uid = os.getuid()
+            
+            # Try using launchctl asuser first (works better from launchd)
+            result = subprocess.run(
+                ['launchctl', 'asuser', str(uid), 'open', '-a', app_name],
                 capture_output=True,
-                timeout=20  # Increased timeout for launch
+                timeout=20
             )
+            
+            # If launchctl asuser fails, fall back to direct open
+            if result.returncode != 0:
+                subprocess.run(
+                    ['open', '-a', app_name],
+                    check=True,
+                    capture_output=True,
+                    timeout=20
+                )
+            
             logger.info(f"✓ Successfully restarted '{app_name}'")
             
         except subprocess.TimeoutExpired:

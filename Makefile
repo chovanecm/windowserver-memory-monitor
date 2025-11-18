@@ -176,14 +176,24 @@ logs:
 	@echo "║              Recent Logs (last 30 lines)              ║"
 	@echo "╚════════════════════════════════════════════════════════╝"
 	@echo ""
+	@echo "Standard Output:"
+	@echo "────────────────────────────────────────────────────────"
 	@if [ -f "$(LOG_FILE)" ]; then \
 		tail -30 $(LOG_FILE); \
 	else \
 		echo "No logs found at $(LOG_FILE)"; \
-		echo "The service may not have run yet."; \
 	fi
 	@echo ""
-	@echo "To follow logs in real-time: tail -f $(LOG_FILE)"
+	@echo "Standard Error:"
+	@echo "────────────────────────────────────────────────────────"
+	@if [ -f "$(ERR_LOG_FILE)" ]; then \
+		tail -30 $(ERR_LOG_FILE); \
+	else \
+		echo "No error logs found at $(ERR_LOG_FILE)"; \
+	fi
+	@echo ""
+	@echo "To follow logs in real-time:"
+	@echo "  tail -f $(LOG_FILE) $(ERR_LOG_FILE)"
 	@echo ""
 
 wizard:
